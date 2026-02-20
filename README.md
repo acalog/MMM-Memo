@@ -62,8 +62,21 @@ The following properties can be configured:
 | `memoHeight`               | [OPTIONAL]<br>Value to specify the height of the note.<br><br> **Default value:** `100px`
 | `memoPadding`              | [OPTIONAL]<br>Value to specify the padding of the note.<br><br> **Default value:** `20px`
 | `memoItemAllign`           | [OPTIONAL]<br>To set the note entry either alligned to the "left" or to the "right".<br><br> **Default value:** `right`
+| `memoFilename`             | [OPTIONAL]<br>Local memo persistence filename/path.<br>Relative paths are resolved inside this module directory.<br><br> **Default value:** `MMM-Memo.json`
+| `memoRemoteFilename`       | [OPTIONAL]<br>Absolute or network path to a shared memo JSON file. When set, MMM-Memo reads/writes this file instead of `memoFilename`.<br><br> **Examples:** `\\\\NAS01\\MagicMirror\\MMM-Memo.json`, `/mnt/magicmirror/MMM-Memo.json`<br> **Default value:** `false`
 | `format`                   | [OPTIONAL]<br>Displays relative date format, for absolute date format provide a string like `'DD:MM HH:mm'` [All Options](http://momentjs.com/docs/#/displaying/format/)
 
+### Example: use a shared/network memo file
+````javascript
+{
+    module: 'MMM-Memo',
+    position: 'top_left',
+    config: {
+        memoTitle: "Shopping",
+        memoRemoteFilename: "\\\\NAS01\\MagicMirror\\MMM-Memo.json"
+    }
+}
+````
 
 
 ## How to Use

@@ -39,6 +39,7 @@ module.exports = NodeHelper.create({
 				res.send({"status": "failed", "error": "No 'level' given."});
 			}
 			else {
+				this.refreshMemosFromFile();
 				var new_item = {"memoTitle": memoTitle.toLowerCase(), "level": level, "item": item, "timestamp": new Date()};
 				res.send({"status": "success", "item": new_item});
 				this.sendSocketNotification("ADD", new_item);
@@ -62,6 +63,7 @@ module.exports = NodeHelper.create({
 				res.send({"status": "failed", "error": "No 'item' given."});
 			}
 			else {
+				this.refreshMemosFromFile();
 				var old_item = {"memoTitle": memoTitle.toLowerCase(), "item": item};
 				res.send({"status": "success", "payload": old_item});
 			    this.removeMemos(old_item);
@@ -85,6 +87,7 @@ module.exports = NodeHelper.create({
 				res.send({"status": "failed", "error": "No 'item' given."});
 			}
 			else {
+				this.refreshMemosFromFile();
 				var display_item = {"memoTitle": memoTitle.toLowerCase(), "item": item};
 				res.send({"status": "success", "payload": display_item});
 			    this.displayMemos(display_item);
@@ -136,24 +139,20 @@ module.exports = NodeHelper.create({
 		    this.memoTitle = payload.memoTitle.toLowerCase();
 			this.memoMaxItems = payload.memoMaxItems;
 			this.memoFilename = payload.memoFilename;
+			console.log("MMM-Memo using memo file: '" + this.memoFilename + "'");
 			this.loadMemos();
 		}
 	},
 
 	storeMemos: function(item){
 		this.memos.push(item);
-		fs.writeFileSync(this.memoFilename, JSON.stringify({"memos": this.memos}), 'utf8');
+		this.writeMemosToFile();
 	},
 
 
 	loadMemos: function(){
-    		if(this.fileExists(this.memoFilename)){
-    			this.memos = JSON.parse(fs.readFileSync(this.memoFilename, 'utf8')).memos;
-
-                this.sendSocketNotification("INIT", this.memos);
-    		} else {
-    			this.memos = [];
-    		}
+		this.refreshMemosFromFile();
+		this.sendSocketNotification("INIT", this.memos);
     	},
 
     removeMemos: function(old_item){
@@ -170,7 +169,7 @@ module.exports = NodeHelper.create({
         }
 
         if (j == 0) console.log("The memoTitle '"+old_item.memoTitle.toLowerCase()+"' doesn't exist");
-        fs.writeFileSync(this.memoFilename, JSON.stringify({"memos": this.memos}), 'utf8');
+        this.writeMemosToFile();
     },
 
     displayMemos: function(item){
@@ -204,8 +203,30 @@ module.exports = NodeHelper.create({
 		try {
 			return fs.statSync(path).isFile();
 		} catch(e) {
-			console.log("No memo file found.");
 			return false;
+		}
+	},
+
+	refreshMemosFromFile: function() {
+		if (!this.fileExists(this.memoFilename)) {
+			this.memos = [];
+			return;
+		}
+
+		try {
+			var content = JSON.parse(fs.readFileSync(this.memoFilename, 'utf8'));
+			this.memos = Array.isArray(content.memos) ? content.memos : [];
+		} catch (e) {
+			console.log("Unable to parse memo file '" + this.memoFilename + "': " + e.message);
+			this.memos = [];
+		}
+	},
+
+	writeMemosToFile: function() {
+		try {
+			fs.writeFileSync(this.memoFilename, JSON.stringify({"memos": this.memos}), 'utf8');
+		} catch (e) {
+			console.log("Unable to write memo file '" + this.memoFilename + "': " + e.message);
 		}
 	}
 	
