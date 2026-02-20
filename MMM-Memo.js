@@ -29,6 +29,7 @@
 		memoPadding: '20px',
 		memoItemAllign: 'right',
 		memoFilename: 'MMM-Memo.json',
+		memoRemoteFilename: false,
 
 		format: false,
 		memoLevel: {
@@ -77,7 +78,7 @@
 
 	start: function() {
         var memoTitle = this.config.memoTitle.toLowerCase();
-        this.sendSocketNotification("LOAD_MEMOS", {memoTitle: memoTitle, memoMaxItems: this.config.memoMaxItems, memoFilename: this.file(this.config.memoFilename)});
+        this.sendSocketNotification("LOAD_MEMOS", {memoTitle: memoTitle, memoMaxItems: this.config.memoMaxItems, memoFilename: this.resolveMemoFilename()});
 
 		Log.info("Starting module: " + this.name);
 
@@ -88,6 +89,18 @@
 			this.updateDom();
 		}, 60000);
 	 },
+
+	resolveMemoFilename: function() {
+		if (typeof this.config.memoRemoteFilename === "string" && this.config.memoRemoteFilename.trim().length > 0) {
+			return this.config.memoRemoteFilename.trim();
+		}
+
+		if (typeof this.config.memoFilename === "string" && /^(?:[a-zA-Z]:[\\/]|\\\\|\/)/.test(this.config.memoFilename.trim())) {
+			return this.config.memoFilename.trim();
+		}
+
+		return this.file(this.config.memoFilename);
+	},
 	
 	socketNotificationReceived: function(notification, payload) {
 
