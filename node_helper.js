@@ -90,6 +90,44 @@ module.exports = NodeHelper.create({
 			    this.displayMemos(display_item);
 			}
 		});
+
+		this.expressApp.get('/ListMemos', (req, res) => {
+			// Optional: filter by memoTitle ?memoTitle=...
+			const query = url.parse(req.url, true).query;
+			const memoTitle = (query.memoTitle || '').toLowerCase().trim();
+
+			try {
+				// Prefer reading the file so the response always matches what's persisted.
+				let memos = [];
+
+				if (this.memoFilename && this.fileExists(this.memoFilename)) {
+				const raw = fs.readFileSync(this.memoFilename, 'utf8');
+				const parsed = JSON.parse(raw);
+				memos = Array.isArray(parsed?.memos) ? parsed.memos : [];
+				} else if (Array.isArray(this.memos)) {
+				// Fallback to in-memory (e.g., if file not created yet)
+				memos = this.memos;
+				}
+
+				if (memoTitle) {
+				memos = memos.filter(m => (m?.memoTitle || '').toLowerCase() === memoTitle);
+				}
+
+				res.set('Content-Type', 'application/json');
+				res.status(200).send({
+				status: "success",
+				count: memos.length,
+				memos
+				});
+			} catch (err) {
+				res.status(500).send({
+				status: "failed",
+				error: "Unable to read/parse memo file",
+				details: String(err?.message || err)
+				});
+			}
+		});
+
 	},
 	
 	socketNotificationReceived: function(notification, payload) {
